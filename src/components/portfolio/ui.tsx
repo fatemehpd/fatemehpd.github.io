@@ -21,7 +21,7 @@ export function SectionHead({ eyebrow, title, intro, id }: { eyebrow: string; ti
   );
 }
 
-export function Logo({ id, size = 'md' }: { id: LogoId; size?: 'sm' | 'md' | 'lg' }) {
+export function Logo({ id, size = 'md' }: { id: LogoId; size?: 'xs' | 'sm' | 'md' | 'lg' }) {
   const l = LOGOS[id];
   return (
     <span className={`logo-tile logo-tile--${size} logo-tile--${id}`}>

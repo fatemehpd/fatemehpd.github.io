@@ -24,6 +24,7 @@ npm run build    # production build into dist/
 * The greeting always finishes. If the visitor drifts to a side during it, that side reacts right after.
 * Zone edges have a little hysteresis so hovering on a boundary doesn't flicker.
 * Clicking the character, or focusing it with the keyboard and pressing Enter, plays the greeting too.
+* **Theme:** opens in dark mode (particle background); the sun/moon button switches to light (ink background) and is remembered per browser.
 * **Touch screens** (phones, tablets): no left/right zones. She greets once when the hero is in view, and tapping her replays it. The hint switches to "Tap to call me !".
 * `prefers-reduced-motion` shortens crossfades and stops the decorative loops.
 

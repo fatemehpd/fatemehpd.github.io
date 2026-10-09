@@ -29,20 +29,27 @@ export default function Experience() {
 
           <div className="glass card">
             <h3 className="label">Teaching assistant</h3>
-            <ul className="teaching">
-              {TEACHING.map((t) => (
-                <li key={t.course}>
-                  <span className="teaching__course">
-                    {t.course}
-                    {t.role === 'Head TA' ? <span className="chip chip--accent">Head TA</span> : null}
-                  </span>
-                  <span className="teaching__term tnum">{t.term}</span>
-                </li>
+            <div className="teaching">
+              {TEACHING.map((g) => (
+                <div key={g.place} className="teaching__group">
+                  <p className="teaching__place">
+                    {g.logo ? <Logo id={g.logo} size="xs" /> : <span className="teaching__mark" aria-hidden="true" />}
+                    {g.place}
+                  </p>
+                  <ul>
+                    {g.courses.map((t) => (
+                      <li key={t.course}>
+                        <span className="teaching__course">
+                          {t.course}
+                          {t.role === 'Head TA' ? <span className="chip chip--accent">Head TA</span> : null}
+                        </span>
+                        {t.term ? <span className="teaching__term tnum">{t.term}</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-            <p className="note">
-              At K. N. Toosi University of Technology, except Advanced Programming (Enghelab-e Eslami Technical College).
-            </p>
+            </div>
           </div>
         </div>
       </div>

@@ -29,7 +29,7 @@ export const PROFILE = {
 export const FACTS = [
   { value: '2', label: 'conference papers' },
   { value: 'Top 5%', label: 'of B.Sc. entrance cohort' },
-  { value: '5', label: 'courses as TA or Head TA' },
+  { value: '7', label: 'courses as TA or Head TA' },
 ];
 
 export const CURRENT = {
@@ -241,13 +241,37 @@ export const RESEARCH_ROLES: Role[] = [
   { title: 'Team Leader', org: 'KN2C Robotics Lab', place: 'K. N. Toosi University', period: 'Apr 2023 – Apr 2024', detail: 'Team management and image processing', logo: 'kntu' },
 ];
 
-/** All at K. N. Toosi University of Technology unless a place is given. */
-export const TEACHING = [
-  { course: 'Advanced Programming (Python)', role: 'TA', term: 'Fall 2024', place: 'Enghelab-e Eslami Technical College' },
-  { course: 'Modeling and Simulation', role: 'Head TA', term: 'Spring 2024' },
-  { course: 'Electronics 1', role: 'TA', term: 'Fall 2023' },
-  { course: 'Numerical Methods', role: 'TA', term: 'Spring 2023' },
-  { course: 'Electrical Circuits 2', role: 'TA', term: 'Fall 2022' },
+export type TeachingGroup = {
+  place: string;
+  logo: LogoId | null;
+  courses: { course: string; role: 'TA' | 'Head TA'; term?: string }[];
+};
+
+/** Teaching assistant roles, grouped by university (newest first). */
+export const TEACHING: TeachingGroup[] = [
+  {
+    place: 'University of Tehran',
+    logo: 'ut',
+    courses: [
+      { course: 'Deep Learning', role: 'TA' },
+      { course: 'Robotics', role: 'TA' },
+    ],
+  },
+  {
+    place: 'Enghelab-e Eslami Technical College',
+    logo: null,
+    courses: [{ course: 'Advanced Programming (Python)', role: 'TA', term: 'Fall 2024' }],
+  },
+  {
+    place: 'K. N. Toosi University of Technology',
+    logo: 'kntu',
+    courses: [
+      { course: 'Modeling and Simulation', role: 'Head TA', term: 'Spring 2024' },
+      { course: 'Electronics 1', role: 'TA', term: 'Fall 2023' },
+      { course: 'Numerical Methods', role: 'TA', term: 'Spring 2023' },
+      { course: 'Electrical Circuits 2', role: 'TA', term: 'Fall 2022' },
+    ],
+  },
 ];
 
 export const SKILLS = [

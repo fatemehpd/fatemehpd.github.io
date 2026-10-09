@@ -2,25 +2,15 @@
  * Light / dark theme.
  *
  * The resolved theme lives on <html data-theme="light|dark">. An inline
- * script in index.html sets it before first paint (no flash). By default the
- * site follows the visitor's system setting; once they use the toggle, their
- * choice is remembered in this browser.
+ * script in index.html sets it before first paint (no flash). The site opens
+ * in dark mode; if a visitor switches to light with the toggle, that choice
+ * is remembered in their browser.
  */
 
 export type Theme = 'light' | 'dark';
 
 const KEY = 'fp-theme';
 const THEME_COLOR: Record<Theme, string> = { light: '#f0f4f7', dark: '#0a0b12' };
-const systemMq = () => window.matchMedia('(prefers-color-scheme: dark)');
-
-function stored(): Theme | null {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === 'light' || v === 'dark' ? v : null;
-  } catch {
-    return null;
-  }
-}
 
 export function currentTheme(): Theme {
   return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
@@ -42,16 +32,6 @@ export function toggleTheme() {
     /* private mode: still switches for this visit */
   }
   apply(next);
-}
-
-/** Keep following the system setting until the visitor picks a theme. */
-export function followSystemTheme() {
-  const mq = systemMq();
-  const onChange = () => {
-    if (!stored()) apply(mq.matches ? 'dark' : 'light');
-  };
-  mq.addEventListener('change', onChange);
-  return () => mq.removeEventListener('change', onChange);
 }
 
 export function onThemeChange(fn: (t: Theme) => void) {

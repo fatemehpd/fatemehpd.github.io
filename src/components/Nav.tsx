@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { followSystemTheme, toggleTheme } from '../theme';
+import { toggleTheme } from '../theme';
 import './Nav.css';
 
 const LINKS = [
@@ -29,11 +29,9 @@ export default function Nav() {
     };
     update();
     window.addEventListener('scroll', onScroll, { passive: true });
-    const stopFollowing = followSystemTheme();
     return () => {
       window.removeEventListener('scroll', onScroll);
       cancelAnimationFrame(raf);
-      stopFollowing();
     };
   }, []);
 
