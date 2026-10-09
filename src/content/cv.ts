@@ -253,8 +253,8 @@ export const TEACHING: TeachingGroup[] = [
     place: 'University of Tehran',
     logo: 'ut',
     courses: [
-      { course: 'Deep Learning', role: 'TA' },
-      { course: 'Robotics', role: 'TA' },
+      { course: 'Deep Learning', role: 'TA', term: 'Fall 2025' },
+      { course: 'Robotics', role: 'TA', term: 'Fall 2025' },
     ],
   },
   {
