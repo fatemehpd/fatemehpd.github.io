@@ -1,0 +1,550 @@
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+
+.hero {
+  --frame-aspect: 0.8884; /* 1656 / 1864 */
+  --hero-h: max(640px, 100svh);
+  --stage-h: min(calc(var(--hero-h) - var(--nav-h) - 10px), 1180px, calc(94vw / var(--frame-aspect)));
+  --stage-w: calc(var(--stage-h) * var(--frame-aspect));
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: relative;
+  isolation: isolate;
+  min-height: var(--hero-h);
+  overflow: clip;
+  container-type: inline-size;
+}
+
+/* --- backdrop ------------------------------------------------------------ */
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  /* the animated ocean shows through; this layer adds the Pacific-blue
+     edges and the bright white light behind the character */
+  background:
+    radial-gradient(ellipse 42% 62% at 50% 56%, #fff 0%, rgba(255, 255, 255, 0.97) 30%, rgba(255, 255, 255, 0.55) 52%, rgba(255, 255, 255, 0) 76%),
+    radial-gradient(ellipse 55% 70% at 0% 100%, rgba(6, 80, 112, 0.42), transparent 70%),
+    radial-gradient(ellipse 55% 70% at 100% 100%, rgba(6, 80, 112, 0.42), transparent 70%),
+    linear-gradient(
+      90deg,
+      rgba(20, 137, 173, 0.9) 0%,
+      rgba(28, 169, 201, 0.7) 12%,
+      rgba(28, 169, 201, 0.32) 26%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0.2) 60%,
+      rgba(28, 169, 201, 0.32) 74%,
+      rgba(28, 169, 201, 0.7) 88%,
+      rgba(20, 137, 173, 0.9) 100%
+    );
+}
+
+/* side light that answers when the cursor visits a side */
+.hero__side {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 42%;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out);
+  pointer-events: none;
+}
+.hero__side--left {
+  left: 0;
+  background: radial-gradient(ellipse 85% 70% at 12% 50%, rgba(240, 252, 255, 0.5), transparent 70%);
+}
+.hero__side--right {
+  right: 0;
+  background: radial-gradient(ellipse 85% 70% at 88% 50%, rgba(240, 252, 255, 0.5), transparent 70%);
+}
+.hero[data-zone='left'] .hero__side--left,
+.hero[data-zone='right'] .hero__side--right {
+  opacity: 1;
+}
+
+/* --- left note ----------------------------------------------------------- */
+
+.hero__note {
+  position: absolute;
+  z-index: 3;
+  left: clamp(24px, 5.6vw, 112px);
+  top: calc(var(--nav-h) + clamp(40px, 15svh, 190px));
+  max-width: 300px;
+  animation: hero-rise 1100ms var(--ease-out) 120ms both;
+}
+
+.hero__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 360;
+  font-size: clamp(28px, 2.5vw, 40px);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.hero__im {
+  display: block;
+  margin-bottom: 0.18em;
+  font-style: italic;
+  font-size: 0.6em;
+  letter-spacing: 0.01em;
+  color: var(--ocean-500);
+}
+
+.hero__role {
+  margin: 12px 0 0;
+  max-width: 250px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.hero__role span {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.hero__hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.hero__hint-touch {
+  display: none;
+}
+.hero[data-mode='touch'] .hero__hint-pointer {
+  display: none;
+}
+.hero[data-mode='touch'] .hero__hint-touch {
+  display: inline;
+}
+
+/* --- stage ---------------------------------------------------------------- */
+
+.hero__stage {
+  position: absolute;
+  z-index: 1;
+  /* centred, but nudged right just enough to clear the name on smaller desktops */
+  --note-room: calc(clamp(24px, 5.6vw, 112px) + 250px);
+  left: clamp(50cqw, calc(var(--note-room) + var(--stage-w) / 2), calc(100cqw - var(--stage-w) / 2));
+  bottom: 0;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  transform: translateX(-50%);
+  animation: hero-stage-in 1200ms var(--ease-out) both;
+}
+
+.hero__glow {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 128%;
+  height: 112%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.9) 42%,
+    rgba(250, 254, 255, 0.45) 68%,
+    rgba(245, 252, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.hero__lifter {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 91%; /* desk line: the desk stays put when she perks up */
+  will-change: transform;
+}
+
+.hero__character {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.hero[data-mode='touch'] .hero__character {
+  cursor: pointer;
+}
+.hero__character:focus-visible {
+  outline: 2px solid var(--ocean-500);
+  outline-offset: -6%;
+  border-radius: 32px;
+}
+
+.hero__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.hero__frames {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
+
+/* soft breathing light from the laptop logo: the only idle motion */
+.hero__laptop-glow {
+  position: absolute;
+  left: 53.5%;
+  top: 74%;
+  width: 26%;
+  height: 16%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(150, 110, 255, 0.32), rgba(255, 90, 200, 0.12) 55%, transparent);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: laptop-glow 4.2s ease-in-out infinite;
+}
+
+/* --- messages -------------------------------------------------------------- */
+
+.hero__messages {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hero__msg {
+  position: absolute;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 8px 15px 9px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(20, 140, 175, 0.2);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 10px 30px -14px rgba(8, 72, 98, 0.45);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+
+  opacity: 0;
+  transform: translate3d(0, 6px, 0) scale(0.97);
+  filter: blur(3px);
+  transition:
+    opacity 260ms ease,
+    transform 320ms var(--ease-out),
+    filter 260ms ease;
+}
+
+.hero__msg[data-active] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity 420ms ease 80ms,
+    transform 560ms var(--ease-out) 80ms,
+    filter 420ms ease 80ms;
+}
+
+.hero__msg--link[data-active] {
+  pointer-events: auto;
+}
+.hero__msg--link svg {
+  color: var(--ocean-500);
+  animation: nudge-down 1.4s ease-in-out infinite;
+}
+.hero__msg--link:hover {
+  border-color: rgba(20, 140, 175, 0.4);
+}
+
+/* positions are a percentage of the stage, so they scale with the character */
+.hero__msg--left {
+  right: 80%;
+  top: 12.5%;
+}
+.hero__msg--right {
+  left: 79%;
+  top: 12.5%;
+}
+.hero__msg--center {
+  right: 67%;
+  top: 6%;
+}
+
+/* --- cursor indicator --------------------------------------------------- */
+
+.cursor-ind {
+  --track: 46px;
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: calc(var(--track) + 8px);
+  height: 22px;
+  color: var(--ocean-600);
+}
+
+.cursor-ind__track {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 6px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(8, 72, 98, 0.08), rgba(8, 72, 98, 0.3), rgba(8, 72, 98, 0.08));
+}
+.cursor-ind__track i {
+  position: absolute;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(8, 72, 98, 0.5);
+  transition: background 300ms ease, transform 300ms var(--ease-out);
+}
+.cursor-ind__track i[data-mark='left'] { left: 0; }
+.cursor-ind__track i[data-mark='center'] { left: 50%; }
+.cursor-ind__track i[data-mark='right'] { left: 100%; }
+
+.hero[data-zone='left'] .cursor-ind i[data-mark='left'],
+.hero[data-zone='center'] .cursor-ind i[data-mark='center'],
+.hero[data-zone='right'] .cursor-ind i[data-mark='right'] {
+  background: var(--ocean-500);
+  transform: scale(1.25);
+}
+
+.cursor-ind__pointer {
+  position: absolute;
+  left: 4px;
+  top: 5px;
+  width: 12px;
+  height: 15px;
+  margin-left: -2px;
+  animation: cursor-demo 6.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transition: transform 520ms var(--ease-out);
+}
+.cursor-ind__pointer svg {
+  display: block;
+  filter: drop-shadow(0 1px 1.5px rgba(4, 30, 46, 0.25));
+}
+
+.cursor-ind__ring {
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  border: 1px solid var(--ocean-500);
+  opacity: 0;
+  animation: cursor-ring 6.4s ease-out infinite;
+}
+
+/* while someone is actually hovering, stop the demo and sit on the live zone */
+.hero[data-mode='pointer']:not([data-zone='none']) .cursor-ind__pointer,
+.hero[data-mode='pointer']:not([data-zone='none']) .cursor-ind__ring {
+  animation: none;
+}
+.hero[data-zone='left'] .cursor-ind__pointer { transform: translateX(0); }
+.hero[data-zone='center'] .cursor-ind__pointer { transform: translateX(calc(var(--track) / 2)); }
+.hero[data-zone='right'] .cursor-ind__pointer { transform: translateX(var(--track)); }
+
+/* touch: a gentle tap on the centre mark */
+.hero[data-mode='touch'] .cursor-ind__pointer {
+  transform: translateX(calc(var(--track) / 2));
+  animation: cursor-tap 2.6s ease-in-out infinite;
+}
+.hero[data-mode='touch'] .cursor-ind__ring {
+  animation: cursor-tap-ring 2.6s ease-out infinite;
+}
+
+/* --- keyframes ----------------------------------------------------------- */
+
+@keyframes cursor-demo {
+  0%, 8% { transform: translateX(0); }
+  26%, 40% { transform: translateX(var(--track)); }
+  58%, 92% { transform: translateX(calc(var(--track) / 2)); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes cursor-ring {
+  0%, 60% { opacity: 0; transform: scale(0.4); }
+  64% { opacity: 0.7; }
+  80%, 100% { opacity: 0; transform: scale(1.6); }
+}
+
+@keyframes cursor-tap {
+  0%, 30%, 100% { transform: translateX(calc(var(--track) / 2)) scale(1); }
+  40% { transform: translateX(calc(var(--track) / 2)) scale(0.82); }
+  52% { transform: translateX(calc(var(--track) / 2)) scale(1); }
+}
+
+@keyframes cursor-tap-ring {
+  0%, 38% { opacity: 0; transform: scale(0.4); }
+  42% { opacity: 0.7; }
+  70%, 100% { opacity: 0; transform: scale(1.7); }
+}
+
+@keyframes laptop-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes nudge-down {
+  0%, 100% { transform: translateY(-1px); }
+  50% { transform: translateY(2px); }
+}
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes hero-stage-in {
+  from { opacity: 0; transform: translate(-50%, 18px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ==========================================================================
+   Stacked layout: phones, small tablets and portrait windows.
+   (On touch screens only the centre experience is used.)
+   ========================================================================== */
+
+@media (max-width: 1023px), (max-aspect-ratio: 4/5) {
+  .hero {
+    --hero-h: 100svh;
+    display: flex;
+    flex-direction: column;
+    min-height: max(560px, 100svh);
+    padding-top: var(--nav-h);
+  }
+
+  .hero__bg {
+    background:
+      radial-gradient(ellipse 80% 52% at 50% 64%, #fff 0%, rgba(255, 255, 255, 0.95) 30%, rgba(255, 255, 255, 0) 76%),
+      radial-gradient(ellipse 90% 50% at 50% 115%, rgba(6, 80, 112, 0.3), transparent 70%),
+      linear-gradient(
+        90deg,
+        rgba(20, 137, 173, 0.85) 0%,
+        rgba(28, 169, 201, 0.45) 18%,
+        rgba(255, 255, 255, 0.3) 40%,
+        rgba(255, 255, 255, 0.45) 50%,
+        rgba(255, 255, 255, 0.3) 60%,
+        rgba(28, 169, 201, 0.45) 82%,
+        rgba(20, 137, 173, 0.85) 100%
+      );
+  }
+
+  .hero__note {
+    position: relative;
+    left: auto;
+    top: auto;
+    max-width: none;
+    padding: clamp(20px, 6svh, 64px) 24px 0;
+    text-align: center;
+  }
+
+  .hero__name {
+    font-size: clamp(27px, 7.6vw, 34px);
+  }
+
+  .hero__hint {
+    justify-content: center;
+    margin-top: 14px;
+  }
+
+  .hero__role {
+    max-width: none;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  .hero__stage {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    flex: none;
+    margin: auto 0 0;
+    align-self: center; /* overflows evenly when wider than the screen */
+    width: min(108vw, 760px, calc((100svh - var(--nav-h) - 168px) * var(--frame-aspect)));
+    min-width: min(100vw, 330px);
+    height: auto;
+    aspect-ratio: 1656 / 1864;
+    transform: none;
+    animation-name: hero-rise;
+  }
+
+  .hero__glow {
+    width: 120%;
+    height: 100%;
+    top: 52%;
+  }
+
+  /* all messages float just above her head */
+  .hero__msg,
+  .hero__msg--center {
+    left: 50%;
+    right: auto;
+    top: 0;
+    font-size: 15px;
+    padding: 7px 13px 8px;
+    transform: translate3d(-50%, calc(-55% + 6px), 0) scale(0.97);
+  }
+  .hero__msg[data-active] {
+    transform: translate3d(-50%, -55%, 0);
+  }
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__note,
+  .hero__stage {
+    animation: none;
+  }
+  .hero__laptop-glow,
+  .hero__msg--link svg,
+  .cursor-ind__pointer,
+  .cursor-ind__ring {
+    animation: none !important;
+  }
+  .cursor-ind__pointer {
+    transform: translateX(calc(var(--track) / 2));
+  }
+  .hero__msg,
+  .hero__msg[data-active] {
+    filter: none;
+    transition: opacity 200ms ease;
+  }
+}

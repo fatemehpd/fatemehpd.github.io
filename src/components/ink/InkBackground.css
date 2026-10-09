@@ -1,0 +1,16 @@
+.ink-bg {
+  position: fixed;
+  z-index: -10;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  /* large viewport height so mobile toolbars showing/hiding never resize it */
+  height: 100lvh;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+.ink-bg[data-ready] {
+  opacity: 1;
+}

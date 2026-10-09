@@ -1,0 +1,107 @@
+:root {
+  /* Pacific: deep navy ink, pacific blue accents, sea-foam surfaces */
+  --ink: #072638;
+  --ink-soft: #2a5468;
+  --ink-faint: #5d8496;
+  --sea-50: #eef9fc;
+  --sea-100: #dcf2f8;
+  --sea-200: #b9e5f0;
+  --sea-300: #8fd3e5;
+  --pacific: #1ca9c9;
+  --ocean-400: #3fb2d0;
+  --ocean-500: #1489ad;
+  --ocean-600: #0a5f80;
+  --nav-h: 76px;
+
+  /* glass */
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg-soft: rgba(255, 255, 255, 0.4);
+  --glass-bg-strong: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(8, 72, 98, 0.06),
+    0 30px 60px -36px rgba(3, 38, 58, 0.42),
+    0 2px 6px -2px rgba(3, 38, 58, 0.08);
+  --glass-blur: blur(18px) saturate(1.5);
+
+  /* soft, ink-like serif for display; crisp grotesk for reading; mono for data */
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: clip;
+  color-scheme: light;
+}
+
+body {
+  /* same colour as the water in the ink animation */
+  background: #f0f4f7;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Fraunces: soft terminals, no wonky letters, optical size follows the font size */
+:where(h1, h2, h3, h4, [class*='title'], [class*='name']) {
+  font-variation-settings: 'SOFT' 100, 'WONK' 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ocean-500);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --nav-h: 64px;
+  }
+}
