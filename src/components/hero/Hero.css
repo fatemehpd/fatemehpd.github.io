@@ -80,7 +80,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 360;
-  font-size: clamp(28px, 2.5vw, 40px);
+  font-size: clamp(24px, 2vw, 32px);
   line-height: 1.04;
   letter-spacing: -0.028em;
   color: var(--ink);
@@ -474,7 +474,7 @@
   }
 
   .hero__name {
-    font-size: clamp(27px, 7.6vw, 34px);
+    font-size: clamp(24px, 6.6vw, 28px);
   }
 
   .hero__hint {

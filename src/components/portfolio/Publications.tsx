@@ -21,26 +21,23 @@ export default function Publications() {
   return (
     <section className="section" id="publications" aria-labelledby="pubs-title">
       <div className="container">
-        <SectionHead id="pubs-title" eyebrow="Publications" title="Papers" />
-        <ol className="pubs" aria-label={`Publications by ${PROFILE.name}`}>
+        <SectionHead id="pubs-title" eyebrow="Publications" />
+        <ol className="glass card pubs" aria-label={`Publications by ${PROFILE.name}`}>
           {PUBLICATIONS.map((p) => (
-            <li key={p.title} className="glass pub">
+            <li key={p.title} className="pub">
               <span className="pub__year tnum">{p.year}</span>
               <div className="pub__body">
-                <div className="pub__tags">
-                  <span className="chip chip--strong">{p.venue.match(/\(([^)]+)\)/)?.[1] ?? 'Conference'}</span>
-                  {p.firstAuthor ? <span className="chip chip--accent">First author</span> : null}
-                </div>
                 <h3 className="pub__title">{p.title}</h3>
                 <Authors text={p.authors} />
                 <p className="pub__venue">
-                  {p.venue}, {p.year}
+                  {p.venue.match(/\(([^)]+)\)/)?.[1] ?? p.venue} {p.year}
+                  {p.firstAuthor ? <span className="chip chip--accent">First author</span> : null}
+                  {p.url ? (
+                    <ExternalLink className="text-link" href={p.url}>
+                      IEEE Xplore
+                    </ExternalLink>
+                  ) : null}
                 </p>
-                {p.url ? (
-                  <ExternalLink className="text-link" href={p.url}>
-                    Read on IEEE Xplore
-                  </ExternalLink>
-                ) : null}
               </div>
             </li>
           ))}

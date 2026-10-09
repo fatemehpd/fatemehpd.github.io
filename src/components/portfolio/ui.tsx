@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { LOGOS, type LogoId } from '../../content/cv';
+import { LOGOS, PROFILE, type LogoId } from '../../content/cv';
 
 export function SectionHead({ eyebrow, title, intro, id }: { eyebrow: string; title?: ReactNode; intro?: ReactNode; id: string }) {
   return (
@@ -80,5 +80,19 @@ export function CopyEmail({ email }: { email: string }) {
         {copied ? 'Copied' : 'Copy'}
       </button>
     </span>
+  );
+}
+
+/** Both email addresses (each with a copy button) and LinkedIn. */
+export function ContactLinks() {
+  return (
+    <div className="contact-links">
+      {PROFILE.emails.map((e) => (
+        <CopyEmail key={e} email={e} />
+      ))}
+      <ExternalLink className="btn-glass" href={PROFILE.linkedin}>
+        LinkedIn
+      </ExternalLink>
+    </div>
   );
 }

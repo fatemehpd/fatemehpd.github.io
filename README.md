@@ -39,7 +39,7 @@ src/components/hero/
   CursorIndicator.tsx            animated cursor hint next to the instruction
 src/content/cv.ts                ALL portfolio text from the CV  ← edit content here
 src/components/portfolio/        About, Education, Projects, Publications,
-                                 Experience, Highlights, Contact + portfolio.css (glass UI)
+                                 Experience, Skills, Contact + portfolio.css (glass UI)
 public/logos/                    TaarLab, University of Tehran, K. N. Toosi logos
 src/components/ink/              scroll-scrubbed ink background (ink.ts)
 public/ink/                      ink animation frames (720w desktop, 432w phones)

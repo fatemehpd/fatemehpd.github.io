@@ -7,7 +7,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'All', label: 'All' },
   { id: 'Robotics', label: 'Robotics' },
   { id: 'Deep Learning', label: 'Deep learning' },
-  { id: 'Course', label: 'Course projects' },
+  { id: 'Course', label: 'Course' },
 ];
 
 const SORTED = [...PROJECTS].sort((a, b) => b.sort.localeCompare(a.sort));
@@ -25,12 +25,7 @@ export default function Projects() {
     <section className="section" id="work" aria-labelledby="work-title">
       <div className="container">
         <div className="sec-head-row">
-          <SectionHead
-            id="work-title"
-            eyebrow="Projects"
-            title="Selected work"
-            intro="Drones and rovers in the field, robots in simulation, and deep learning for medical images and street scenes."
-          />
+          <SectionHead id="work-title" eyebrow="Projects" />
           <div className="glass glass--pill segmented" role="group" aria-label="Filter projects">
             {FILTERS.map((f) => (
               <button
@@ -49,32 +44,30 @@ export default function Projects() {
 
         <ul className="project-grid" aria-live="polite">
           {shown.map((p) => (
-            <li key={p.title} className={`glass project${p.featured ? ' project--featured' : ''}`}>
+            <li key={p.title} className="glass project">
               <div className="project__meta">
-                <span className={`cat cat--${p.category.replace(' ', '-').toLowerCase()}`}>{p.category === 'Course' ? 'Course project' : p.category}</span>
+                <span className={`cat cat--${p.category.replace(' ', '-').toLowerCase()}`}>{p.category}</span>
                 <span className="project__date tnum">{p.date}</span>
               </div>
               <h3 className="project__title">{p.title}</h3>
-              {p.context ? <p className="project__context">{p.context}</p> : null}
-              <p className="project__summary">{p.summary}</p>
-              {p.role ? (
-                <p className="project__role">
-                  <span>My part</span> {p.role}
-                </p>
-              ) : null}
-              {p.metric ? (
-                <p className="project__metric">
-                  <span className="project__metric-value tnum">{p.metric.value}</span>
-                  <span className="project__metric-label">{p.metric.label}</span>
-                </p>
-              ) : null}
-              <ul className="chips project__tags" aria-label="Tools and topics">
-                {p.tags.map((t) => (
-                  <li key={t} className="chip">
-                    {t}
-                  </li>
-                ))}
-              </ul>
+              <p className="project__summary">
+                {p.context ? <em className="project__context">{p.context}. </em> : null}
+                {p.summary}
+              </p>
+              <div className="project__foot">
+                {p.metric ? (
+                  <span className="metric">
+                    <strong className="tnum">{p.metric.value}</strong> {p.metric.label}
+                  </span>
+                ) : null}
+                <ul className="chips" aria-label="Tools and topics">
+                  {p.tags.map((t) => (
+                    <li key={t} className="chip">
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </li>
           ))}
         </ul>

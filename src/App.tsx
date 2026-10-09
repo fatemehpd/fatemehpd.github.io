@@ -6,7 +6,7 @@ import Education from './components/portfolio/Education';
 import Projects from './components/portfolio/Projects';
 import Publications from './components/portfolio/Publications';
 import Experience from './components/portfolio/Experience';
-import Highlights from './components/portfolio/Highlights';
+import Skills from './components/portfolio/Skills';
 import Contact from './components/portfolio/Contact';
 import './components/portfolio/portfolio.css';
 
@@ -23,7 +23,7 @@ export default function App() {
           <Projects />
           <Publications />
           <Experience />
-          <Highlights />
+          <Skills />
           <Contact />
         </div>
       </main>

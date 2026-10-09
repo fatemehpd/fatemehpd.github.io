@@ -1,5 +1,5 @@
 import { CURRENT, FACTS, PROFILE } from '../../content/cv';
-import { CopyEmail, ExternalLink, Logo, SectionHead } from './ui';
+import { ContactLinks, ExternalLink, Logo, SectionHead } from './ui';
 
 export default function About() {
   return (
@@ -8,51 +8,45 @@ export default function About() {
         <SectionHead id="about-title" eyebrow="About" />
 
         <div className="about-grid">
-          <article className="glass about-card">
-            <div className="about-card__block">
-              <h3 className="label">Research interests</h3>
-              <ul className="interests" aria-label="Research interests">
-                {PROFILE.interests.map((i) => (
-                  <li key={i}>{i}</li>
-                ))}
-              </ul>
-            </div>
-
+          <article className="glass card about-card">
+            <h3 className="label">Research interests</h3>
+            <ul className="interests" aria-label="Research interests">
+              {PROFILE.interests.map((i) => (
+                <li key={i}>{i}</li>
+              ))}
+            </ul>
             <p className="about-card__role">
               {PROFILE.role} at <strong>{PROFILE.affiliation}</strong>
             </p>
-
-            <div className="about-card__contact">
-              <CopyEmail email={PROFILE.email} />
-              <ExternalLink className="btn-glass" href={PROFILE.linkedin}>
-                LinkedIn
-              </ExternalLink>
-            </div>
+            <ul className="facts" aria-label="At a glance">
+              {FACTS.map((f) => (
+                <li key={f.label}>
+                  <strong className="tnum">{f.value}</strong> {f.label}
+                </li>
+              ))}
+            </ul>
+            <ContactLinks />
           </article>
 
-          <article className="glass now-card" aria-labelledby="now-title">
+          <article className="glass card now-card" aria-labelledby="now-title">
             <p className="now-card__status">
               <span className="pulse-dot" aria-hidden="true" /> Currently
             </p>
-            <div className="now-card__org">
-              <Logo id={CURRENT.logo} size="lg" />
+            <div className="org">
+              <Logo id={CURRENT.logo} size="md" />
               <div>
-                <h3 className="now-card__name" id="now-title">
+                <h3 className="org__name" id="now-title">
                   {CURRENT.org}
                 </h3>
-                <p className="now-card__place">{CURRENT.place}</p>
+                <p className="org__place">
+                  {CURRENT.title} · {CURRENT.place}
+                </p>
               </div>
             </div>
             <dl className="meta-list">
               <div>
-                <dt>Role</dt>
-                <dd>
-                  {CURRENT.title} <span className="muted">· {CURRENT.since}</span>
-                </dd>
-              </div>
-              <div>
-                <dt>Focus</dt>
-                <dd>{CURRENT.focus}</dd>
+                <dt>Since</dt>
+                <dd className="tnum">{CURRENT.since.replace(' – present', '')}</dd>
               </div>
               <div>
                 <dt>Thesis</dt>
@@ -63,7 +57,7 @@ export default function About() {
                 <dd className="link-list">
                   {CURRENT.supervisors.map((s) => (
                     <ExternalLink key={s.name} className="text-link" href={s.url}>
-                      {s.name}
+                      {s.name.replace('Prof. ', '')}
                     </ExternalLink>
                   ))}
                 </dd>
@@ -71,15 +65,6 @@ export default function About() {
             </dl>
           </article>
         </div>
-
-        <ul className="facts" aria-label="At a glance">
-          {FACTS.map((f) => (
-            <li key={f.label} className="glass glass--soft fact">
-              <span className="fact__value">{f.value}</span>
-              <span className="fact__label">{f.label}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );
