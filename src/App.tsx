@@ -1,5 +1,5 @@
 import Nav from './components/Nav';
-import InkBackground from './components/ink/InkBackground';
+import Background from './components/background/Background';
 import Hero from './components/hero/Hero';
 import About from './components/portfolio/About';
 import Education from './components/portfolio/Education';
@@ -13,7 +13,7 @@ import './components/portfolio/portfolio.css';
 export default function App() {
   return (
     <>
-      <InkBackground />
+      <Background />
       <Nav />
       <main id="top">
         <Hero />

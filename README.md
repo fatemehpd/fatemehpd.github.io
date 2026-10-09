@@ -41,8 +41,9 @@ src/content/cv.ts                ALL portfolio text from the CV  ← edit conten
 src/components/portfolio/        About, Education, Projects, Publications,
                                  Experience, Skills, Contact + portfolio.css (glass UI)
 public/logos/                    TaarLab, University of Tehran, K. N. Toosi logos
-src/components/ink/              scroll-scrubbed ink background (ink.ts)
-public/ink/                      ink animation frames (720w desktop, 432w phones)
+src/components/background/       scroll-scrubbed backgrounds (scrub.ts): ink (light), shapes (dark)
+public/ink/, public/shapes/      background frames (large and small sizes)
+src/theme.ts, src/theme-dark.css  light/dark switching and the dark palette
 src/components/Nav.tsx           top bar; turns into a floating glass bar on scroll
 src/App.tsx                      Nav + Hero + portfolio sections
 ```

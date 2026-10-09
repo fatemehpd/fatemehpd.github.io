@@ -1,0 +1,178 @@
+/* ==========================================================================
+   Dark mode
+   Night-water palette over the particle-shapes background: deep navy,
+   cyan light, frosted dark glass. Applied with <html data-theme="dark">.
+   Everything here only overrides the light theme.
+   ========================================================================== */
+
+:root[data-theme='dark'] {
+  --ink: #e4f2f7;
+  --ink-soft: #a6c2cf;
+  --ink-faint: #7391a1;
+  --sea-50: #0d1520;
+  --pacific: #3cc8e6;
+  --ocean-400: #5ccfe9;
+  --ocean-500: #4ac2e2;
+  --ocean-600: #8bdcf0;
+
+  --glass-bg: rgba(13, 22, 36, 0.58);
+  --glass-bg-soft: rgba(13, 22, 36, 0.45);
+  --glass-bg-strong: rgba(13, 22, 36, 0.74);
+  --glass-border: rgba(140, 214, 238, 0.14);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 30px 60px -36px rgba(0, 0, 0, 0.8),
+    0 2px 6px -2px rgba(0, 0, 0, 0.4);
+
+  --line: rgba(140, 214, 238, 0.12);
+  --chip-bg: rgba(255, 255, 255, 0.05);
+  --on-accent: #04131c;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] body {
+  background: #0a0b12;
+}
+
+/* --- nav --------------------------------------------------------------- */
+
+:root[data-theme='dark'] .nav[data-scrolled] .nav__bar {
+  background: rgba(10, 15, 25, 0.74);
+}
+:root[data-theme='dark'] .nav__links a:hover,
+:root[data-theme='dark'] .theme-toggle {
+  background: rgba(255, 255, 255, 0.07);
+}
+:root[data-theme='dark'] .theme-toggle {
+  color: #ffd27a;
+}
+
+/* --- hero --------------------------------------------------------------- */
+
+:root[data-theme='dark'] .hero__bg {
+  background:
+    radial-gradient(ellipse 40% 58% at 50% 58%, rgba(60, 200, 230, 0.2) 0%, rgba(60, 200, 230, 0.07) 45%, transparent 72%),
+    linear-gradient(90deg, rgba(5, 8, 14, 0.55) 0%, rgba(5, 8, 14, 0) 28%, rgba(5, 8, 14, 0) 72%, rgba(5, 8, 14, 0.55) 100%);
+}
+:root[data-theme='dark'] .hero__glow {
+  background: radial-gradient(
+    closest-side,
+    rgba(70, 200, 235, 0.22) 0%,
+    rgba(70, 200, 235, 0.1) 45%,
+    rgba(70, 200, 235, 0) 100%
+  );
+}
+:root[data-theme='dark'] .hero__side--left {
+  background: radial-gradient(ellipse 85% 70% at 12% 50%, rgba(60, 200, 230, 0.12), transparent 70%);
+}
+:root[data-theme='dark'] .hero__side--right {
+  background: radial-gradient(ellipse 85% 70% at 88% 50%, rgba(60, 200, 230, 0.12), transparent 70%);
+}
+:root[data-theme='dark'] .hero__msg {
+  background: rgba(13, 22, 36, 0.82);
+  border-color: rgba(140, 214, 238, 0.22);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 10px 30px -14px rgba(0, 0, 0, 0.8);
+}
+:root[data-theme='dark'] .hero__msg--link:hover {
+  border-color: rgba(140, 214, 238, 0.45);
+}
+/* cursor hint */
+:root[data-theme='dark'] .cursor-ind {
+  color: var(--ocean-500);
+}
+:root[data-theme='dark'] .cursor-ind__track {
+  background: linear-gradient(90deg, rgba(140, 214, 238, 0.08), rgba(140, 214, 238, 0.35), rgba(140, 214, 238, 0.08));
+}
+:root[data-theme='dark'] .cursor-ind__track i {
+  background: #0d1520;
+  border-color: rgba(140, 214, 238, 0.5);
+}
+:root[data-theme='dark'] .cursor-ind__pointer svg path {
+  stroke: #0a0b12;
+}
+
+/* --- portfolio: glass and shared parts ---------------------------------- */
+
+:root[data-theme='dark'] .glass::before {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.015) 35%, rgba(255, 255, 255, 0) 60%);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-theme='dark'] .glass {
+    background: rgba(13, 22, 36, 0.92);
+  }
+}
+
+:root[data-theme='dark'] .sec-head__eyebrow {
+  background: rgba(13, 22, 36, 0.78);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 20px -14px rgba(0, 0, 0, 0.8);
+}
+
+:root[data-theme='dark'] .chip,
+:root[data-theme='dark'] .facts li {
+  background: var(--chip-bg);
+  border-color: var(--line);
+}
+:root[data-theme='dark'] .chip--accent {
+  background: rgba(60, 200, 230, 0.14);
+  border-color: rgba(60, 200, 230, 0.32);
+}
+
+:root[data-theme='dark'] .text-link {
+  text-decoration-color: rgba(139, 220, 240, 0.35);
+}
+
+:root[data-theme='dark'] .btn-glass {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+:root[data-theme='dark'] .btn-glass:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+:root[data-theme='dark'] .copy-email {
+  background: rgba(60, 200, 230, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(60, 200, 230, 0.3);
+}
+:root[data-theme='dark'] .copy-email__text {
+  color: var(--ink);
+}
+:root[data-theme='dark'] .copy-email__btn {
+  color: var(--on-accent);
+  background: var(--pacific);
+}
+:root[data-theme='dark'] .copy-email__btn:hover {
+  background: var(--ocean-400);
+}
+
+/* logos keep their white tiles so their own colours stay true */
+:root[data-theme='dark'] .logo-tile {
+  box-shadow: 0 8px 18px -12px rgba(0, 0, 0, 0.8);
+}
+
+:root[data-theme='dark'] .meta-list,
+:root[data-theme='dark'] .pub,
+:root[data-theme='dark'] .teaching li,
+:root[data-theme='dark'] .skill-row {
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .segmented__btn[aria-pressed='true'],
+:root[data-theme='dark'] .metric {
+  color: var(--on-accent);
+  background: var(--pacific);
+}
+
+:root[data-theme='dark'] .project:hover {
+  background: rgba(18, 32, 50, 0.72);
+}
+
+:root[data-theme='dark'] .footer {
+  background: rgba(13, 22, 36, 0.66);
+  border-color: var(--glass-border);
+}

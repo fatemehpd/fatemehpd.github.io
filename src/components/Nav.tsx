@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { followSystemTheme, toggleTheme } from '../theme';
 import './Nav.css';
 
 const LINKS = [
@@ -28,9 +29,11 @@ export default function Nav() {
     };
     update();
     window.addEventListener('scroll', onScroll, { passive: true });
+    const stopFollowing = followSystemTheme();
     return () => {
       window.removeEventListener('scroll', onScroll);
       cancelAnimationFrame(raf);
+      stopFollowing();
     };
   }, []);
 
@@ -49,6 +52,19 @@ export default function Nav() {
             ))}
           </ul>
         </nav>
+        <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label="Switch between light and dark mode">
+          {/* sun: shown in dark mode (switches to light) */}
+          <svg className="theme-toggle__sun" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+            <g stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" />
+            </g>
+          </svg>
+          {/* moon: shown in light mode (switches to dark) */}
+          <svg className="theme-toggle__moon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+            <path d="M20.2 14.6A8.4 8.4 0 0 1 9.4 3.8a8.4 8.4 0 1 0 10.8 10.8Z" fill="currentColor" />
+          </svg>
+        </button>
       </div>
     </header>
   );

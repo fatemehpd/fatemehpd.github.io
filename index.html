@@ -7,6 +7,16 @@
     <meta name="theme-color" content="#f0f4f7" />
     <meta name="description" content="Fatemeh Pakdaman — portfolio" />
     <title>Fatemeh Pakdaman — Portfolio</title>
+    <script>
+      // set the theme before first paint: saved choice, else the system setting
+      (function () {
+        var t;
+        try { t = localStorage.getItem('fp-theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0a0b12');
+      })();
+    </script>
     <link rel="preload" as="image" type="image/webp" href="%BASE_URL%hero/working-1200.webp"
       imagesrcset="%BASE_URL%hero/working-720.webp 720w, %BASE_URL%hero/working-1200.webp 1200w"
       imagesizes="(max-width: 767px) 100vw, 860px" fetchpriority="high" />
