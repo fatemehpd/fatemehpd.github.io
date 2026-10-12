@@ -31,7 +31,7 @@ npm run build    # production build into dist/
 ## Where things live
 
 ```
-public/character/                240 transparent WebP frames of the character clip (648 px, 432 px for phones)
+public/character/                227 transparent WebP frames, upscaled 4x and cut out (1080 / 720 / 480 px)
 src/components/hero/
   frames.ts                      clip timeline, messages, reaction steps  ← tweak timings here
   heroEngine.ts                  canvas frame player (idle loop, reactions, cross-fades, zones)

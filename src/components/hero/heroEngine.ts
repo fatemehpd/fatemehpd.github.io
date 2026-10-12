@@ -1,11 +1,13 @@
 import {
   FPS,
   FRAME_COUNT,
+  FRAME_SIZES,
   IDLE,
   RANGES,
   SEQUENCES,
   STILL,
   frameUrl,
+  type FrameSize,
   type MessageId,
   type SequenceId,
   type Step,
@@ -35,10 +37,10 @@ class FrameStore {
   private inflight = 0;
   private disposed = false;
 
-  private width: 648 | 432;
+  private width: FrameSize;
   private onLoad: (i: number) => void;
 
-  constructor(width: 648 | 432, onLoad: (i: number) => void) {
+  constructor(width: FrameSize, onLoad: (i: number) => void) {
     this.width = width;
     this.onLoad = onLoad;
   }
@@ -163,8 +165,11 @@ export class HeroEngine {
     this.onReady = opts.onReady;
     this.ctx = els.canvas.getContext('2d')!;
 
-    const cssW = els.canvas.clientWidth || 600;
-    const width: 648 | 432 = opts.touch && cssW < 520 ? 432 : 648;
+    // smallest frame size that covers the canvas in device pixels; phones and
+    // tablets stop at 720 to keep mobile data reasonable
+    const need = (els.canvas.clientWidth || 600) * Math.min(window.devicePixelRatio || 1, 2) * 0.9;
+    const sizes = opts.touch ? FRAME_SIZES.filter((s) => s <= 720) : FRAME_SIZES;
+    const width = sizes.find((s) => s >= need) ?? sizes[sizes.length - 1];
     this.store = new FrameStore(width, (i) => {
       if (i === 0 && this.onReady) {
         this.onReady();

@@ -1,8 +1,9 @@
 /**
  * Character animation, taken from the video clip of Fatemeh at her desk.
  *
- * The clip is stored as 240 transparent WebP frames (24 fps, 10 s) in
- * public/character/<648|432>/NNN.webp. Timeline of the source clip:
+ * The clip is stored as transparent WebP frames (24 fps, 10 s), upscaled 4x
+ * with an anime super-resolution model and cut out of the white background,
+ * in public/character/<1080|720|480>/NNN.webp. Timeline of the source clip:
  *
  *     0 –  48   working (idle loop; she blinks, the laptop logo shifts colour)
  *    50 –  80   turns and looks to the left
@@ -17,7 +18,10 @@ export const FRAME_COUNT = 240;
 export const FPS = 24;
 export const FRAME_ASPECT = 1; // frames are square crops
 
-export function frameUrl(i: number, width: 648 | 432) {
+export const FRAME_SIZES = [480, 720, 1080] as const;
+export type FrameSize = (typeof FRAME_SIZES)[number];
+
+export function frameUrl(i: number, width: FrameSize) {
   return `${import.meta.env.BASE_URL}character/${width}/${String(i).padStart(3, '0')}.webp`;
 }
 
