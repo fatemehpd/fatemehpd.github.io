@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .hero {
-  --frame-aspect: 0.8884; /* 1656 / 1864 */
+  --frame-aspect: 1; /* square character frames */
   --hero-h: max(640px, 100svh);
   --stage-h: min(calc(var(--hero-h) - var(--nav-h) - 10px), 1180px, calc(94vw / var(--frame-aspect)));
   --stage-w: calc(var(--stage-h) * var(--frame-aspect));
@@ -162,13 +162,6 @@
   pointer-events: none;
 }
 
-.hero__lifter {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 91%; /* desk line: the desk stays put when she perks up */
-  will-change: transform;
-}
-
 .hero__character {
   position: absolute;
   inset: 0;
@@ -189,22 +182,18 @@
   border-radius: 32px;
 }
 
-.hero__frame {
+.hero__canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  user-select: none;
-  -webkit-user-drag: none;
+  display: block;
   pointer-events: none;
-  will-change: opacity;
+  opacity: 0;
+  transition: opacity 500ms ease;
 }
-
-.hero__frames {
-  position: absolute;
-  inset: 0;
-  isolation: isolate;
+.hero[data-ready] .hero__canvas {
+  opacity: 1;
 }
 
 /* soft breathing light from the laptop logo: the only idle motion */
@@ -495,10 +484,10 @@
     flex: none;
     margin: auto 0 0;
     align-self: center; /* overflows evenly when wider than the screen */
-    width: min(108vw, 760px, calc((100svh - var(--nav-h) - 168px) * var(--frame-aspect)));
+    width: min(128vw, 760px, calc((100svh - var(--nav-h) - 150px) * var(--frame-aspect)));
     min-width: min(100vw, 330px);
     height: auto;
-    aspect-ratio: 1656 / 1864;
+    aspect-ratio: 1 / 1;
     transform: none;
     animation-name: hero-rise;
   }

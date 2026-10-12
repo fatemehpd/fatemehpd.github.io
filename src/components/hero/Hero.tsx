@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { MESSAGES, POSES, frameSrc, frameSrcSet, type MessageId, type Pose } from './frames';
+import { MESSAGES, type MessageId } from './frames';
 import { HeroEngine, zoneFor, type Zone } from './heroEngine';
 import CursorIndicator from './CursorIndicator';
 import './Hero.css';
 
 const INTERACTIVE_QUERY = '(min-width: 768px) and (hover: hover) and (pointer: fine)';
 const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
-const STAGE_SIZES = '(max-width: 767px) 100vw, 860px';
 
 const SIDE_MESSAGES: MessageId[] = ['left', 'right'];
 const CENTER_MESSAGES: MessageId[] = ['hey', 'hi'];
@@ -20,31 +19,33 @@ const CENTER_MESSAGES: MessageId[] = ['hey', 'hi'];
  */
 export default function Hero() {
   const rootRef = useRef<HTMLElement>(null);
-  const lifterRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const layerRefs = useRef<Partial<Record<Pose, HTMLImageElement>>>({});
   const msgRefs = useRef<Partial<Record<MessageId, HTMLElement>>>({});
 
   useEffect(() => {
     const root = rootRef.current;
-    const lifter = lifterRef.current;
+    const canvas = canvasRef.current;
     const button = buttonRef.current;
-    if (!root || !lifter || !button) return;
+    if (!root || !canvas || !button) return;
 
     const interactiveMq = window.matchMedia(INTERACTIVE_QUERY);
     const reducedMq = window.matchMedia(REDUCED_QUERY);
 
+    let ready = false;
     const engine = new HeroEngine(
+      { root, canvas, messages: msgRefs.current },
       {
-        root,
-        lifter,
-        layers: layerRefs.current as Record<Pose, HTMLImageElement>,
-        messages: msgRefs.current,
+        reducedMotion: reducedMq.matches,
+        touch: !interactiveMq.matches,
+        onReady: () => {
+          ready = true;
+          root.dataset.ready = '';
+          applyMode();
+        },
       },
-      { reducedMotion: reducedMq.matches },
     );
 
-    let ready = false;
     let zone: Zone | null = null;
     let rectLeft = 0;
     let rectWidth = 1;
@@ -67,15 +68,6 @@ export default function Hero() {
       }
     };
 
-    // Make sure every frame is decoded before the first swap so no
-    // crossfade ever blends into an empty layer.
-    const imgs = POSES.map((p) => layerRefs.current[p]!).filter(Boolean);
-    Promise.all(imgs.map((img) => img.decode().catch(() => undefined))).then(() => {
-      ready = true;
-      root.dataset.ready = '';
-      applyMode();
-    });
-
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch' || !interactiveMq.matches || !ready) return;
       const next = zoneFor((e.clientX - rectLeft) / rectWidth, zone);
@@ -92,7 +84,13 @@ export default function Hero() {
       if (ready) engine.greet();
     };
 
-    // Touch devices: greet once when the hero is comfortably in view.
+    // Pause the animation while the hero is off-screen; on touch devices,
+    // greet once when the hero is comfortably in view.
+    const visibility = new IntersectionObserver(([entry]) => engine.setVisible(entry.isIntersecting), { threshold: 0 });
+    visibility.observe(root);
+    const onTab = () => engine.setVisible(!document.hidden);
+    document.addEventListener('visibilitychange', onTab);
+
     const io = new IntersectionObserver(
       ([entry]) => {
         if (interactiveMq.matches || greetedOnView || !entry.isIntersecting) return;
@@ -123,6 +121,8 @@ export default function Hero() {
     return () => {
       engine.destroy();
       io.disconnect();
+      visibility.disconnect();
+      document.removeEventListener('visibilitychange', onTab);
       ro.disconnect();
       window.clearTimeout(viewTimer);
       root.removeEventListener('pointermove', onMove);
@@ -161,37 +161,15 @@ export default function Hero() {
 
       <div className="hero__stage">
         <div className="hero__glow" aria-hidden="true" />
-        <div className="hero__lifter" ref={lifterRef}>
-          <button
-            ref={buttonRef}
-            type="button"
-            className="hero__character"
-            aria-label="Say hi to Fatemeh"
-          >
-            <span className="hero__frames">
-            {POSES.map((pose) => (
-              <img
-                key={pose}
-                ref={(el) => {
-                  if (el) layerRefs.current[pose] = el;
-                }}
-                className="hero__frame"
-                src={frameSrc(pose, 1200)}
-                srcSet={frameSrcSet(pose)}
-                sizes={STAGE_SIZES}
-                width={1200}
-                height={1351}
-                alt={pose === 'working' ? 'Illustration of Fatemeh working on her laptop' : ''}
-                aria-hidden={pose === 'working' ? undefined : true}
-                draggable={false}
-                decoding="async"
-                fetchPriority={pose === 'working' ? 'high' : 'low'}
-              />
-            ))}
-            </span>
-            <span className="hero__laptop-glow" aria-hidden="true" />
-          </button>
-        </div>
+        <button ref={buttonRef} type="button" className="hero__character" aria-label="Say hi to Fatemeh">
+          <canvas
+            ref={canvasRef}
+            className="hero__canvas"
+            role="img"
+            aria-label="Animated illustration of Fatemeh working on her laptop"
+          />
+          <span className="hero__laptop-glow" aria-hidden="true" />
+        </button>
 
         <div className="hero__messages" aria-hidden="true">
           {SIDE_MESSAGES.map((id) => (

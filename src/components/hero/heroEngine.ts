@@ -1,79 +1,193 @@
 import {
-  POSES,
-  RETURN_FADE,
+  FPS,
+  FRAME_COUNT,
+  IDLE,
+  RANGES,
   SEQUENCES,
+  STILL,
+  frameUrl,
   type MessageId,
-  type Pose,
   type SequenceId,
   type Step,
 } from './frames';
 
 export type Zone = 'left' | 'center' | 'right';
 
-type Layer = { el: HTMLElement; o: number };
-
 export type HeroEngineElements = {
   root: HTMLElement;
-  lifter: HTMLElement;
-  layers: Record<Pose, HTMLElement>;
+  canvas: HTMLCanvasElement;
   messages: Partial<Record<MessageId, HTMLElement>>;
 };
 
-const EPS = 0.002;
+/* ------------------------------------------------------------------------ */
+/* Frame loading                                                             */
+/* ------------------------------------------------------------------------ */
 
 /**
- * Imperative animation engine for the hero character.
+ * Loads character frames in priority order: the idle loop first, then the
+ * greeting, then the side reactions, each coarse-to-fine. The player always
+ * draws the nearest loaded frame, so nothing waits on the network.
+ */
+class FrameStore {
+  readonly frames: (HTMLImageElement | null)[] = new Array(FRAME_COUNT).fill(null);
+  private queue: number[] = [];
+  private requested = new Set<number>();
+  private inflight = 0;
+  private disposed = false;
+
+  private width: 648 | 432;
+  private onLoad: (i: number) => void;
+
+  constructor(width: 648 | 432, onLoad: (i: number) => void) {
+    this.width = width;
+    this.onLoad = onLoad;
+  }
+
+  /** Queue the frames needed for the given ranges, coarse-to-fine. */
+  want(ranges: [number, number][]) {
+    const order: number[] = [];
+    const seen = new Set<number>();
+    for (const stride of [8, 4, 2, 1]) {
+      for (const [a, b] of ranges) {
+        for (let i = a; i <= b; i += stride) {
+          if (!seen.has(i) && !this.requested.has(i)) {
+            seen.add(i);
+            order.push(i);
+          }
+        }
+      }
+    }
+    this.queue.push(...order);
+    this.pump();
+  }
+
+  private pump() {
+    while (!this.disposed && this.inflight < 6 && this.queue.length) {
+      const i = this.queue.shift()!;
+      if (this.requested.has(i)) continue;
+      this.requested.add(i);
+      this.inflight++;
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = frameUrl(i, this.width);
+      const done = (ok: boolean) => {
+        this.inflight--;
+        if (ok && !this.disposed) {
+          this.frames[i] = img;
+          this.onLoad(i);
+        }
+        this.pump();
+      };
+      img.decode().then(
+        () => done(true),
+        () => done(img.complete && img.naturalWidth > 0),
+      );
+    }
+  }
+
+  /** The loaded frame closest to i (or null if nothing has loaded yet). */
+  get(i: number) {
+    const f = this.frames;
+    if (f[i]) return f[i];
+    for (let k = 1; k < FRAME_COUNT; k++) {
+      if (i - k >= 0 && f[i - k]) return f[i - k];
+      if (i + k < FRAME_COUNT && f[i + k]) return f[i + k];
+    }
+    return null;
+  }
+
+  destroy() {
+    this.disposed = true;
+    this.queue = [];
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Player                                                                     */
+/* ------------------------------------------------------------------------ */
+
+const ease = (t: number) => t * t * (3 - 2 * t);
+
+/**
+ * Imperative character player.
  *
- * React renders the markup once; everything that changes per frame
- * (layer opacity, the small "excited" lift, active message, zone) is written
- * straight to the DOM from a single requestAnimationFrame loop, so the
- * interaction never causes React re-renders. The loop only runs while
- * something is actually moving or a sequence is playing.
+ * React renders the markup once; this class draws frames on a canvas from a
+ * single requestAnimationFrame loop and toggles message attributes directly,
+ * so interaction never re-renders React. When idle she keeps working (a short
+ * ping-pong loop); each reaction is a real clip from the source video, joined
+ * to the others with brief cross-fades.
  */
 export class HeroEngine {
   private els: HeroEngineElements;
-  private layers: Record<Pose, Layer>;
+  private ctx: CanvasRenderingContext2D;
+  private store: FrameStore;
 
-  private pose: Pose = 'working';
-  private fade = RETURN_FADE;
-  private z = 1;
+  // what is on screen: frame `cur`, optionally fading into `next`
+  private cur = 0;
+  private next = -1;
+  private mix = 0;
 
+  // idle loop
+  private idlePos = 0;
+  private idleDir = 1;
+
+  // running sequence
   private seqId: SequenceId | null = null;
   private steps: Step[] = [];
   private stepIndex = 0;
-  private stepElapsed = 0;
+  private stepTime = 0; // ms spent in the current step
+  private pos = 0; // fractional frame within play/hold steps
+  private dir = 1;
+  private jumpFrom = 0;
 
   private zone: Zone | null = null;
   private queued: Zone | null = null;
   private interactive = false;
-
   private msg: MessageId | null = null;
-
-  // spring for the excited lift
-  private lift = 0;
-  private liftV = 0;
-  private liftTarget = 0;
 
   private raf = 0;
   private last = 0;
+  private visible = true;
+  private dirty = true;
   private reducedMotion: boolean;
+  private dpr = 1;
+  private ro: ResizeObserver;
+  private onReady?: () => void;
 
-  constructor(els: HeroEngineElements, opts: { reducedMotion: boolean }) {
+  constructor(
+    els: HeroEngineElements,
+    opts: { reducedMotion: boolean; touch: boolean; onReady?: () => void },
+  ) {
     this.els = els;
     this.reducedMotion = opts.reducedMotion;
-    this.layers = Object.fromEntries(
-      POSES.map((p) => [p, { el: els.layers[p], o: p === 'working' ? 1 : 0 }]),
-    ) as Record<Pose, Layer>;
-    for (const p of POSES) {
-      const l = this.layers[p];
-      l.el.style.opacity = String(l.o);
-      l.el.style.zIndex = p === 'working' ? '1' : '0';
-    }
+    this.onReady = opts.onReady;
+    this.ctx = els.canvas.getContext('2d')!;
+
+    const cssW = els.canvas.clientWidth || 600;
+    const width: 648 | 432 = opts.touch && cssW < 520 ? 432 : 648;
+    this.store = new FrameStore(width, (i) => {
+      if (i === 0 && this.onReady) {
+        this.onReady();
+        this.onReady = undefined;
+      }
+      if (Math.abs(i - this.cur) < 6) {
+        this.dirty = true;
+        this.wake();
+      }
+    });
+    const ranges: [number, number][] = [[0, 0], RANGES.idle, RANGES.greet];
+    if (!opts.touch) ranges.push(RANGES.left, RANGES.right);
+    this.store.want(ranges);
+
+    this.ro = new ResizeObserver(() => this.resize());
+    this.ro.observe(els.canvas);
+    this.resize();
+
     els.root.dataset.zone = 'none';
-    els.root.dataset.pose = 'working';
+    this.wake();
   }
 
-  /* ------------------------------------------------------------ public API */
+  /* --- public API ----------------------------------------------------- */
 
   setInteractive(on: boolean) {
     this.interactive = on;
@@ -82,6 +196,12 @@ export class HeroEngine {
 
   setReducedMotion(on: boolean) {
     this.reducedMotion = on;
+    this.wake();
+  }
+
+  setVisible(on: boolean) {
+    this.visible = on;
+    if (on) this.wake();
   }
 
   /** The cursor only selects a zone; the character never tracks it. */
@@ -90,13 +210,11 @@ export class HeroEngine {
     this.zone = zone;
     this.els.root.dataset.zone = zone ?? 'none';
     if (!this.interactive) return;
-
     if (zone === null) {
       this.queued = null;
       return;
     }
-    // The greeting is the main moment: let it finish, then react to
-    // wherever the visitor is if they moved to a side meanwhile.
+    // the greeting is the main moment: let it finish, then react to a side
     if (this.seqId === 'greet') {
       this.queued = zone === 'center' ? null : zone;
       return;
@@ -106,60 +224,90 @@ export class HeroEngine {
 
   /** Play the greeting regardless of zone (tap, click, keyboard, mobile). */
   greet() {
-    if (this.seqId === 'greet' && this.stepIndex < this.steps.length - 1) return;
+    if (this.seqId === 'greet') return;
     this.queued = null;
     this.start('greet');
-  }
-
-  isGreeting() {
-    return this.seqId === 'greet';
   }
 
   destroy() {
     cancelAnimationFrame(this.raf);
     this.raf = 0;
+    this.ro.disconnect();
+    this.store.destroy();
   }
 
-  /* -------------------------------------------------------------- internals */
+  /* --- sequencing ----------------------------------------------------- */
+
+  private stillSteps(id: SequenceId): Step[] {
+    const steps: Step[] = [];
+    for (const s of STILL[id]) {
+      steps.push({ kind: 'msg', id: s.msg }, { kind: 'jump', to: s.frame, ms: 0 }, { kind: 'hold', a: s.frame, b: s.frame, ms: 2400 });
+    }
+    steps.push({ kind: 'msg', id: null }, { kind: 'jump', to: 0, ms: 0 });
+    return steps;
+  }
 
   private start(id: SequenceId) {
+    this.settleFade();
     this.seqId = id;
-    this.steps = SEQUENCES[id];
-    this.stepIndex = 0;
+    this.steps = this.reducedMotion ? this.stillSteps(id) : SEQUENCES[id];
+    this.stepIndex = -1;
     this.els.root.dataset.seq = id;
-    this.applyStep(this.steps[0]);
+    this.advance();
     this.wake();
   }
 
-  private applyStep(step: Step) {
-    this.stepElapsed = 0;
-    this.setPose(step.pose, step.fade ?? 120);
-    this.setMessage(step.msg);
-    this.liftTarget = step.lift ?? 0;
-  }
-
-  private endSequence() {
-    this.seqId = null;
-    this.steps = [];
-    delete this.els.root.dataset.seq;
-    this.setPose('working', RETURN_FADE);
-    this.setMessage(null);
-    this.liftTarget = 0;
-
-    const q = this.queued;
-    this.queued = null;
-    if (q && q === this.zone && this.interactive) {
-      this.start(q === 'center' ? 'greet' : q);
+  /** Commit a half-finished cross-fade so the next one starts cleanly. */
+  private settleFade() {
+    if (this.next >= 0) {
+      if (this.mix >= 0.5) this.cur = this.next;
+      this.next = -1;
+      this.mix = 0;
+      this.dirty = true;
     }
   }
 
-  private setPose(pose: Pose, fade: number) {
-    if (pose === this.pose) return;
-    this.pose = pose;
-    this.fade = this.reducedMotion ? 40 : fade;
-    this.z += 1;
-    this.layers[pose].el.style.zIndex = String(this.z);
-    this.els.root.dataset.pose = pose;
+  private advance() {
+    this.stepIndex++;
+    this.stepTime = 0;
+    if (this.stepIndex >= this.steps.length) {
+      this.finish();
+      return;
+    }
+    const s = this.steps[this.stepIndex];
+    if (s.kind === 'msg') {
+      this.setMessage(s.id);
+      this.advance();
+    } else if (s.kind === 'play') {
+      this.settleFade();
+      this.pos = s.a;
+      this.dir = s.b >= s.a ? 1 : -1;
+    } else if (s.kind === 'hold') {
+      this.settleFade();
+      this.pos = Math.min(Math.max(this.cur, Math.min(s.a, s.b)), Math.max(s.a, s.b));
+      this.dir = 1;
+    } else if (s.kind === 'jump') {
+      this.settleFade();
+      this.jumpFrom = this.cur;
+      if (s.ms <= 0 || s.to === this.cur) {
+        this.cur = s.to;
+        this.dirty = true;
+        this.advance();
+      }
+    }
+  }
+
+  private finish() {
+    this.seqId = null;
+    this.steps = [];
+    delete this.els.root.dataset.seq;
+    this.setMessage(null);
+    this.idlePos = Math.min(Math.max(this.cur, IDLE[0]), IDLE[1]);
+    this.idleDir = this.idlePos >= IDLE[1] ? -1 : 1;
+
+    const q = this.queued;
+    this.queued = null;
+    if (q && q === this.zone && this.interactive) this.start(q === 'center' ? 'greet' : q);
   }
 
   private setMessage(id: MessageId | null) {
@@ -169,85 +317,115 @@ export class HeroEngine {
     if (id) this.els.messages[id]?.setAttribute('data-active', '');
   }
 
+  /* --- frame loop ---------------------------------------------------------- */
+
   private wake() {
-    if (this.raf) return;
+    if (this.raf || !this.visible) return;
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.tick);
   }
 
   private tick = (now: number) => {
-    // clamp dt so a backgrounded tab doesn't jump a whole sequence at once
+    this.raf = 0;
     const dt = Math.min(64, Math.max(0, now - this.last));
     this.last = now;
+    const before = this.cur;
+    const beforeMix = this.mix;
 
-    /* sequence clock */
     if (this.seqId) {
-      this.stepElapsed += dt;
-      const step = this.steps[this.stepIndex];
-      if (this.stepElapsed >= step.hold) {
-        this.stepIndex += 1;
-        if (this.stepIndex < this.steps.length) this.applyStep(this.steps[this.stepIndex]);
-        else this.endSequence();
+      this.stepTime += dt;
+      const s = this.steps[this.stepIndex];
+      if (s?.kind === 'play') {
+        const fps = s.fps ?? FPS;
+        this.pos += this.dir * (dt / 1000) * fps;
+        const done = this.dir > 0 ? this.pos >= s.b : this.pos <= s.b;
+        this.cur = done ? s.b : Math.round(this.pos);
+        if (done) this.advance();
+      } else if (s?.kind === 'hold') {
+        const lo = Math.min(s.a, s.b);
+        const hi = Math.max(s.a, s.b);
+        if (hi > lo) {
+          this.pos += this.dir * (dt / 1000) * (s.fps ?? 10);
+          if (this.pos >= hi) {
+            this.pos = hi;
+            this.dir = -1;
+          } else if (this.pos <= lo) {
+            this.pos = lo;
+            this.dir = 1;
+          }
+          this.cur = Math.round(this.pos);
+        }
+        if (this.stepTime >= s.ms) this.advance();
+      } else if (s?.kind === 'jump') {
+        const t = Math.min(1, this.stepTime / s.ms);
+        this.cur = this.jumpFrom;
+        this.next = s.to;
+        this.mix = ease(t);
+        if (t >= 1) {
+          this.cur = s.to;
+          this.next = -1;
+          this.mix = 0;
+          this.advance();
+        }
       }
+    } else if (!this.reducedMotion) {
+      // idle: keep working, ping-ponging through the loop
+      this.idlePos += this.idleDir * (dt / 1000) * FPS;
+      if (this.idlePos >= IDLE[1]) {
+        this.idlePos = IDLE[1];
+        this.idleDir = -1;
+      } else if (this.idlePos <= IDLE[0]) {
+        this.idlePos = IDLE[0];
+        this.idleDir = 1;
+      }
+      this.cur = Math.round(this.idlePos);
     }
 
-    /* crossfade: incoming pose fades in on top, the rest fade out under it */
-    let settled = true;
-    const top = this.layers[this.pose];
-    const kIn = 1 - Math.exp(-dt / this.fade);
-    const kOut = 1 - Math.exp(-dt / (this.fade * 1.15));
-    if (top.o < 1) {
-      top.o += (1 - top.o) * kIn;
-      if (1 - top.o < EPS) top.o = 1;
-      top.el.style.opacity = top.o.toFixed(3);
-      settled = settled && top.o === 1;
-    }
-    // start dissolving the old pose once the new one mostly covers it,
-    // which avoids a see-through dip in the middle of the blend
-    if (top.o > 0.45) {
-      for (const p of POSES) {
-        if (p === this.pose) continue;
-        const l = this.layers[p];
-        if (l.o === 0) continue;
-        l.o -= l.o * kOut;
-        if (l.o < EPS) l.o = 0;
-        l.el.style.opacity = l.o.toFixed(3);
-        settled = settled && l.o === 0;
-      }
-    } else {
-      settled = false;
-    }
+    if (this.dirty || this.cur !== before || this.mix !== beforeMix) this.draw();
 
-    /* excited lift: a lightly damped spring */
-    if (this.reducedMotion) {
-      if (this.lift !== 0) {
-        this.lift = 0;
-        this.liftV = 0;
-        this.els.lifter.style.transform = '';
-      }
-    } else {
-      const s = dt / 1000;
-      const acc = 180 * (this.liftTarget - this.lift) - 15 * this.liftV;
-      this.liftV += acc * s;
-      this.lift += this.liftV * s;
-      const still = Math.abs(this.liftTarget - this.lift) < 0.001 && Math.abs(this.liftV) < 0.001;
-      if (still) {
-        this.lift = this.liftTarget;
-        this.liftV = 0;
-      }
-      const y = (-this.lift * 1.1).toFixed(3);
-      const sc = (1 + this.lift * 0.012).toFixed(4);
-      this.els.lifter.style.transform =
-        this.lift === 0 ? '' : `translate3d(0, ${y}%, 0) scale(${sc})`;
-      settled = settled && still;
-    }
-
-    if (this.seqId || !settled) {
-      this.raf = requestAnimationFrame(this.tick);
-    } else {
-      this.raf = 0;
-    }
+    const animating = !!this.seqId || !this.reducedMotion;
+    if (animating && this.visible) this.raf = requestAnimationFrame(this.tick);
   };
+
+  private resize() {
+    const c = this.els.canvas;
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(c.clientWidth * this.dpr));
+    const h = Math.max(1, Math.round(c.clientHeight * this.dpr));
+    if (c.width !== w || c.height !== h) {
+      c.width = w;
+      c.height = h;
+      this.ctx.imageSmoothingQuality = 'high';
+    }
+    this.dirty = true;
+    this.draw();
+  }
+
+  private draw() {
+    this.dirty = false;
+    const { width: w, height: h } = this.els.canvas;
+    const a = this.store.get(this.cur);
+    if (!a) return;
+    const ctx = this.ctx;
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(a, 0, 0, w, h);
+    if (this.next >= 0 && this.mix > 0) {
+      const b = this.store.get(this.next);
+      if (b && b !== a) {
+        // exact linear cross-fade (1-m)·A + m·B: additive blending of the
+        // premultiplied frames, so she never turns see-through mid-fade
+        ctx.clearRect(0, 0, w, h);
+        ctx.globalAlpha = 1 - this.mix;
+        ctx.drawImage(a, 0, 0, w, h);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = this.mix;
+        ctx.drawImage(b, 0, 0, w, h);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
 }
 
 /** Map a horizontal position (0..1) to a zone, with hysteresis at the edges. */

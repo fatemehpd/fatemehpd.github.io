@@ -18,7 +18,7 @@ npm run build    # production build into dist/
 | --- | --- |
 | Left third | She looks left, "Anyone here on the left?", holds ~2.6 s, back to work |
 | Right third | She looks right, "Anyone here on the right?", holds ~2.6 s, back to work |
-| Centre third | Greeting: looks up at you ("Hey, it's you!") → takes the headset off and rests it on her neck → waves ("Hiiii!") → points down ("Check out the portfolio", links to `#about`) → back to work |
+| Centre third | Greeting: looks up at you ("Hey, it's you!") → takes the headset off and rests it on her neck → waves ("Hiiii!") → reaches toward the laptop ("Check out the portfolio", links to `#about`) → puts the headset back on and returns to work |
 
 * A reaction plays once per visit to a zone; leave and come back to trigger it again.
 * The greeting always finishes. If the visitor drifts to a side during it, that side reacts right after.
@@ -31,10 +31,10 @@ npm run build    # production build into dist/
 ## Where things live
 
 ```
-public/hero/                     7 frames × 2 sizes (720w, 1200w), transparent WebP
+public/character/                240 transparent WebP frames of the character clip (648 px, 432 px for phones)
 src/components/hero/
-  frames.ts                      pose list, messages, sequence timings  ← tweak timings here
-  heroEngine.ts                  rAF animation engine (crossfades, spring, zones)
+  frames.ts                      clip timeline, messages, reaction steps  ← tweak timings here
+  heroEngine.ts                  canvas frame player (idle loop, reactions, cross-fades, zones)
   Hero.tsx                       markup + event wiring (renders once)
   Hero.css                       layout, gradient, messages, cursor hint, mobile
   CursorIndicator.tsx            animated cursor hint next to the instruction

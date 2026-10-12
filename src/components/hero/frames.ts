@@ -1,38 +1,24 @@
 /**
- * Character frames extracted from the original animation.
- * All frames are aligned to the same desk/laptop position, upscaled,
- * and exported with a transparent background (see public/hero/).
+ * Character animation, taken from the video clip of Fatemeh at her desk.
+ *
+ * The clip is stored as 240 transparent WebP frames (24 fps, 10 s) in
+ * public/character/<648|432>/NNN.webp. Timeline of the source clip:
+ *
+ *     0 –  48   working (idle loop; she blinks, the laptop logo shifts colour)
+ *    50 –  80   turns and looks to the left
+ *    90 – 108   looks to the right
+ *   114 – 140   looks up at the visitor
+ *   144 – 176   takes the headset off and rests it around her neck
+ *   180 – 216   waves hello
+ *   218 – 239   reaches toward the laptop, smiling
  */
-export const POSES = [
-  'working',
-  'lookLeft',
-  'lookRight',
-  'surprised',
-  'headsetOff',
-  'wave',
-  'pointDown',
-] as const;
 
-export type Pose = (typeof POSES)[number];
+export const FRAME_COUNT = 240;
+export const FPS = 24;
+export const FRAME_ASPECT = 1; // frames are square crops
 
-const FILE: Record<Pose, string> = {
-  working: 'working',
-  lookLeft: 'look-left',
-  lookRight: 'look-right',
-  surprised: 'surprised',
-  headsetOff: 'headset-off',
-  wave: 'wave',
-  pointDown: 'point-down',
-};
-
-export const FRAME_ASPECT = 1656 / 1864; // width / height of the source frames
-
-export function frameSrc(pose: Pose, width: 720 | 1200) {
-  return `${import.meta.env.BASE_URL}hero/${FILE[pose]}-${width}.webp`;
-}
-
-export function frameSrcSet(pose: Pose) {
-  return `${frameSrc(pose, 720)} 720w, ${frameSrc(pose, 1200)} 1200w`;
+export function frameUrl(i: number, width: 648 | 432) {
+  return `${import.meta.env.BASE_URL}character/${width}/${String(i).padStart(3, '0')}.webp`;
 }
 
 /** Contextual messages shown next to the character. */
@@ -46,33 +32,77 @@ export const MESSAGES = {
 
 export type MessageId = keyof typeof MESSAGES;
 
-export type Step = {
-  pose: Pose;
-  /** how long to stay on this step, in ms */
-  hold: number;
-  msg: MessageId | null;
-  /** crossfade time constant used when entering this pose (ms) */
-  fade?: number;
-  /** small upward "excited" lift, 0..1 */
-  lift?: number;
-};
+/** Frame ranges used by the player. */
+export const IDLE: [number, number] = [0, 48];
+
+/**
+ * One step of a reaction:
+ *  - play:  run through frames a → b at `fps` (reverse if b < a)
+ *  - jump:  cross-fade from whatever is showing to frame `to` over `ms`
+ *  - hold:  gently rock between frames a ↔ b for `ms` (keeps her alive)
+ *  - msg:   show a message (or hide with null)
+ */
+export type Step =
+  | { kind: 'play'; a: number; b: number; fps?: number }
+  | { kind: 'jump'; to: number; ms: number }
+  | { kind: 'hold'; a: number; b: number; ms: number; fps?: number }
+  | { kind: 'msg'; id: MessageId | null };
 
 export type SequenceId = 'left' | 'right' | 'greet';
 
 export const SEQUENCES: Record<SequenceId, Step[]> = {
-  left: [{ pose: 'lookLeft', hold: 2600, msg: 'left', fade: 110 }],
-  right: [{ pose: 'lookRight', hold: 2600, msg: 'right', fade: 110 }],
+  left: [
+    { kind: 'msg', id: 'left' },
+    { kind: 'jump', to: 50, ms: 160 },
+    { kind: 'play', a: 50, b: 72 },
+    { kind: 'hold', a: 64, b: 76, ms: 2300, fps: 10 },
+    { kind: 'msg', id: null },
+    { kind: 'play', a: 72, b: 50 },
+    { kind: 'jump', to: 48, ms: 160 },
+  ],
+  right: [
+    { kind: 'msg', id: 'right' },
+    { kind: 'jump', to: 114, ms: 180 },
+    { kind: 'play', a: 114, b: 96 },
+    { kind: 'hold', a: 96, b: 104, ms: 2300, fps: 10 },
+    { kind: 'msg', id: null },
+    { kind: 'play', a: 104, b: 114 },
+    { kind: 'jump', to: 48, ms: 220 },
+  ],
   greet: [
-    // looks up at the visitor, a little startled and excited
-    { pose: 'surprised', hold: 1050, msg: 'hey', fade: 85, lift: 1 },
-    // takes the whole headset off and rests it around her neck
-    { pose: 'headsetOff', hold: 1100, msg: 'hey', fade: 100, lift: 0.2 },
+    // looks up at the visitor
+    { kind: 'msg', id: 'hey' },
+    { kind: 'jump', to: 114, ms: 180 },
+    { kind: 'play', a: 114, b: 178 }, // ...and takes the whole headset off
     // waves hello
-    { pose: 'wave', hold: 1800, msg: 'hi', fade: 95, lift: 0.55 },
-    // points down toward the portfolio
-    { pose: 'pointDown', hold: 3000, msg: 'portfolio', fade: 100, lift: 0 },
+    { kind: 'msg', id: 'hi' },
+    { kind: 'play', a: 178, b: 216 },
+    // reaches toward the laptop: "check out the portfolio"
+    { kind: 'msg', id: 'portfolio' },
+    { kind: 'play', a: 216, b: 239 },
+    { kind: 'hold', a: 228, b: 239, ms: 2600, fps: 10 },
+    { kind: 'msg', id: null },
+    // puts the headset back on and returns to work
+    { kind: 'jump', to: 176, ms: 450 },
+    { kind: 'play', a: 176, b: 140 },
+    { kind: 'jump', to: 48, ms: 260 },
   ],
 };
 
-/** fade constant used when settling back into the working pose */
-export const RETURN_FADE = 150;
+/** Frames worth loading for each mode (touch screens only ever greet). */
+export const RANGES = {
+  idle: [0, 48] as [number, number],
+  greet: [114, 239] as [number, number],
+  left: [48, 80] as [number, number],
+  right: [94, 114] as [number, number],
+};
+
+/** Frame shown for each reaction when the visitor prefers reduced motion. */
+export const STILL: Record<SequenceId, { frame: number; msg: MessageId }[]> = {
+  left: [{ frame: 70, msg: 'left' }],
+  right: [{ frame: 100, msg: 'right' }],
+  greet: [
+    { frame: 196, msg: 'hi' },
+    { frame: 232, msg: 'portfolio' },
+  ],
+};
